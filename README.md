@@ -1,34 +1,43 @@
-Ibotta Dev Project
+# ANSTAGRAM
+
 =========
 
-
-# The Project
+Anstagram is an APP + API that allows fast searches for [anagrams](https://en.wikipedia.org/wiki/Anagram). Currently you can lookup anagrams (in the english language) for a set of letters/or a word.
 
 ---
 
-The project is to build an API that allows fast searches for [anagrams](https://en.wikipedia.org/wiki/Anagram). `dictionary.txt` is a text file containing every word in the English dictionary. Ingesting the file doesn’t need to be fast, and you can store as much data in memory as you like.
+## TODO
 
-The API you design should respond on the following endpoints as specified.
+**MVP**
 
-- `POST /words.json`: Takes a JSON array of English-language words and adds them to the corpus (data store).
-- `GET /anagrams/:word.json`:
-  - Returns a JSON array of English-language words that are anagrams of the word passed in the URL.
-  - This endpoint should support an optional query param that indicates the maximum number of results to return.
-- `DELETE /words/:word.json`: Deletes a single word from the data store.
-- `DELETE /words.json`: Deletes all contents of the data store.
+- [ ] `POST /words.json`: Takes a JSON array of English-language words and adds them to the corpus (data store).
+- [ ] `GET /anagrams/:word.json`:
+  - [ ]  Returns a JSON array of English-language words that are anagrams of the word passed in the URL.
+  - [ ]  This endpoint should support an optional query param that indicates the maximum number of results to return.
+- [ ] `DELETE /words/:word.json`: Deletes a single word from the data store.
+- [ ] `DELETE /words.json`: Deletes all contents of the data store.
 
+**Optional/Stretch**
 
-**Optional**
-- Endpoint that returns a count of words in the corpus and min/max/median/average word length
-- Respect a query param for whether or not to include proper nouns in the list of anagrams
-- Endpoint that identifies words with the most anagrams
-- Endpoint that takes a set of words and returns whether or not they are all anagrams of each other
-- Endpoint to return all anagram groups of size >= *x*
-- Endpoint to delete a word *and all of its anagrams*
+- [ ] Endpoint that returns a count of words in the corpus and min/max/median/average word length
+- [ ] Respect a query param for whether or not to include proper nouns in the list of anagrams
+- [ ] Endpoint that identifies words with the most anagrams
+- [ ] Endpoint that takes a set of words and returns whether or not they are all anagrams of each other
+- [ ] Endpoint to return all anagram groups of size >= *x*
+- [ ] Endpoint to delete a word *and all of its anagrams*
 
-Clients will interact with the API over HTTP, and all data sent and received is expected to be in JSON format
+**DEPLOY**
 
-Example (assuming the API is being served on localhost port 3000):
+- [ ] heroku
+- Considering: aws, azure, GCP, firebase, try serverless, or dockerized approach?
+
+---
+
+### ABOUT THE API
+
+Clients can interact with the API over HTTP, and all data sent and received is expected to be in JSON format. Some examples (assuming the API is being served on localhost port 3000):
+
+USAGE
 
 ```{bash}
 # Adding words to the corpus
@@ -68,10 +77,13 @@ HTTP/1.1 204 No Content
 ...
 ```
 
-Note that a word is not considered to be its own anagram.
+**Note:** a word is not considered to be its own anagram.
 
+## Running Locally
 
-## Tests
+TODO - Add instructions to spin up the app locally
+
+## Testing
 
 We have provided a suite of tests to help as you develop the API. To run the tests you must have Ruby installed ([docs](https://www.ruby-lang.org/en/documentation/installation/)):
 
@@ -85,9 +97,7 @@ If you are running your server somewhere other than localhost port 3000, you can
 
 ```{bash}
 ruby anagram_test.rb -h
-```
-
-You are welcome to add additional test cases if that helps with your development process. The [benchmark-bigo](https://github.com/davy/benchmark-bigo) gem is helpful if you wish to do performance testing on your implementation.
+```.
 
 ## API Client
 
@@ -103,20 +113,31 @@ $ irb
 > client.get('/anagrams/read.json')
 ```
 
-## Documentation
+## Looking Forward
 
-Optionally, you can provide documentation that is useful to consumers and/or maintainers of the API.
+Features that may be useful to add to the API:
 
-Suggestions for documentation topics include:
+- Move to aws lambda + gateway
+- Data Visualization for the cryto nerds out there.
+- Browser Extension - shuffle words on the go.
+- Internationalization. Are anagrams a concept that exists in all languages? Find a linguist to chime in.
+- More security on the DB, experiment with vanilla pg instead of using Knex.js
+- Try [benchmark-bigo](https://github.com/davy/benchmark-bigo) for performance testing on your implementation
 
-- Features you think would be useful to add to the API
-- Implementation details (which data store you used, etc.)
-- Limits on the length of words that can be stored or limits on the number of results that will be returned
-- Any edge cases you find while working on the project
-- Design overview and trade-offs you considered
+## Implementation Details
 
+Refer to the [package.json](./package.json) for a full listing of project dependencies.
 
-# Deliverable
----
+**Data Storage**
 
-Please provide the code for the assignment either in a private repository (GitHub or Bitbucket) or as a zip file. If you have a deliverable that is deployed on the web please provide a link, otherwise give us instructions for running it locally.
+I chose to use a PostgreSQL database to have indexing and SQL querying available for potentially complex querying. Also, this is a tool I've used with Node and Rails and is quick to get plugged in with dev, staging, and prod localled and on Heroku.
+
+A NoSQL implimentation (DynamoDB or Redis) would be the ideal step for near-instant data retrieval. This would also allow for a lightweight/free AWS deployment. In fact, there's [tons of tutorials on this](https://serverless.com/blog/node-rest-api-with-serverless-lambda-and-dynamodb/), maybe I'll have time to try it out. See [SQL vs NoSQL](https://www.xplenty.com/blog/the-sql-vs-nosql-difference/) for more discussion on the topic and use cases - a valuable rabbit hole to explore.
+
+TODO - Discussion of word storage length, api response limitations/protection, etc...
+
+**Edge Cases** What issues and challenges did I run into?
+
+Node Async vs Sync when ingesting the data store/seeding the postgres database. This discussion gets into the core of Node and how the V8 engine is working with the File System. TODO - Expand with links from the stream sandbox project
+
+Node vs Ruby TODO - add a short discussion. Node Fluency, lightweight, goal to try a serverless/lambda implimentation.
