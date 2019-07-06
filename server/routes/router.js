@@ -9,8 +9,7 @@ router.get('/', (req, res, next) => {
 
 // MVP ROUTES
 router.post('/:words.:json', addWords);
-// router.get('/anagrams/:word.:json/:limit?', TODO);
-// router.get('/words/:limit?', TODO);
+router.get('/anagrams/:word.:json/:limit?', getAnagrams);
 router.delete('/words.:json', deleteAllWords);
 // router.delete('/words/:word.:json', TODO);
 
@@ -28,6 +27,7 @@ const getLettersId = word =>
     .sort()
     .join('');
 
+// CREATE
 function addWords(req, res, next) {
   // console.log('REQ Body: ', req.body);
   const newWords = req.body.words
@@ -46,6 +46,41 @@ function addWords(req, res, next) {
     .catch(next);
 }
 
+// READ
+function getAnagrams(req, res, next) {
+  // console.log('QUERY: ', req.query);
+  const { word } = req.params;
+  // console.log('WORD: ', word);
+  const letters_id = getLettersId(word);
+  const { limit } = req.query;
+  // Store the query
+  let getAnagramsQuery = knex('words')
+    .select('*')
+    .whereNot({ word })
+    .where({
+      letters_id,
+    });
+  // Check for a valid 'limit' param, modify the query chain
+  if (limit >= 0) {
+    console.warn('LIMIT: ', limit);
+    getAnagramsQuery = getAnagramsQuery.limit(limit);
+  }
+  getAnagramsQuery
+    .then(item => {
+      // console.log('QUERY RES: ', item);
+      if (!item) return res.status(404).send({ message: 'Item not found.' });
+      const resultsArray = item.reduce((words, entry) => {
+        // console.log(words);
+        if (entry.word !== word) words.push(entry.word);
+        return words;
+      }, []);
+      // console.log('DB RES: ', resultsArray);
+      res.status(200).json({ anagrams: resultsArray });
+    })
+    .catch(next);
+}
+
+// DELETE
 function deleteAllWords(req, res, next) {
   // console.log('TESTING DELETE WORDS');
   // On Multiple DELETE - should there be different handling? Best Practice?
