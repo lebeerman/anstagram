@@ -42,8 +42,8 @@ const wordsQueries = {
       .catch(next);
   },
 
-  // READ
   getAnagrams(req, res, next) {
+    // READ
     const { word } = req.params;
     const letters_id = getLettersId(word);
     const { limit, noun } = getQueryOption(req.query);
@@ -96,10 +96,10 @@ const wordsQueries = {
       .delete()
       .then(count =>
         count >= 0
-          ? res.status(204).json({
+          ? res.status(200).json({
               message: `Removed ${count}, No Content`,
             })
-          : res.status(204).json({
+          : res.status(204).send({
               message: 'Nothing deleted!',
             })
       )
@@ -118,7 +118,7 @@ const wordsQueries = {
       .delete()
       .then(count =>
         count >= 0
-          ? res.status(204).json({
+          ? res.status(200).json({
               message: `Removed ${count}, No Content`,
             })
           : res.status(204).json({
@@ -130,67 +130,73 @@ const wordsQueries = {
 
   getWordsInfo(req, res, next) {
     const info = {};
-    knex('words')
-      .count('*')
-      .then(count => {
-        if (count.rows[0]) {
-          info.count = minResult.rows[0].word.length;
-        } else {
-          info.count = 'Not Found';
-        }
+    try {
+      knex('words')
+        .count('*')
+        .then(count => {
+          console.log('COUNT:', count[0]);
+          if (count[0].count) {
+            info.count = count[0].count;
+          } else {
+            info.count = 'Count Not Found';
+          }
 
-        knex.schema
-          .raw('SELECT word FROM words ORDER BY LENGTH(word) ASC LIMIT 1')
-          .then(minResult => {
-            if (minResult.rows[0]) {
-              info.min = minResult.rows[0].word.length;
-            } else {
-              info.min = 'Not Found';
-            }
-            knex.schema
-              .raw('SELECT word FROM words ORDER BY LENGTH(word) DESC LIMIT 1')
-              .then(maxResult => {
-                if (maxResult.rows[0]) {
-                  info.max = maxResult.rows[0].word.length;
-                } else {
-                  info.max = 'Not Found';
-                }
+          knex.schema
+            .raw('SELECT word FROM words ORDER BY LENGTH(word) ASC LIMIT 1')
+            .then(minResult => {
+              if (minResult.rows[0]) {
+                info.min = minResult.rows[0].word.length;
+              } else {
+                info.min = 'Not Found';
+              }
+              knex.schema
+                .raw(
+                  'SELECT word FROM words ORDER BY LENGTH(word) DESC LIMIT 1'
+                )
+                .then(maxResult => {
+                  if (maxResult.rows[0]) {
+                    info.max = maxResult.rows[0].word.length;
+                  } else {
+                    info.max = 'Not Found';
+                  }
 
-                knex.schema
-                  .raw(
-                    'SELECT percentile_disc(0.5) WITHIN GROUP (ORDER BY LENGTH(words.word)) FROM words'
-                  )
-                  .then(medianResult => {
-                    if (medianResult.rows[0]) {
-                      info.median = medianResult.rows[0].percentile_disc;
-                    } else {
-                      info.median = 'Not Found';
-                    }
+                  knex.schema
+                    .raw(
+                      'SELECT percentile_disc(0.5) WITHIN GROUP (ORDER BY LENGTH(words.word)) FROM words'
+                    )
+                    .then(medianResult => {
+                      if (medianResult.rows[0]) {
+                        info.median = medianResult.rows[0].percentile_disc;
+                      } else {
+                        info.median = 'Not Found';
+                      }
 
-                    knex.schema
-                      .raw('SELECT AVG(LENGTH(word)) FROM words')
-                      .then(avgResult => {
-                        if (avgResult.rows[0]) {
-                          info.avg = parseFloat(avgResult.rows[0].avg).toFixed(
-                            2
-                          );
-                        } else {
-                          info.avg = 'Not Found';
-                        }
-                        console.log('INFO: ', info);
-                        res.status(204).json({
-                          message: info,
-                        });
-                      })
-                      .catch(next);
-                  })
-                  .catch(next);
-              })
-              .catch(next);
-          })
-          .catch(next);
-      })
-      .catch(next);
+                      knex.schema
+                        .raw('SELECT AVG(LENGTH(word)) FROM words')
+                        .then(avgResult => {
+                          if (avgResult.rows[0]) {
+                            info.avg = parseFloat(
+                              avgResult.rows[0].avg
+                            ).toFixed(2);
+                          } else {
+                            info.avg = 'Not Found';
+                          }
+                          console.log('INFO: ', info);
+                          res.status(200).json({ info });
+                        })
+                        .catch(next);
+                    })
+                    .catch(next);
+                })
+                .catch(next);
+            })
+            .catch(next);
+        })
+        .catch(next);
+    } catch (e) {
+      console.log(e);
+      next(e);
+    }
   },
 
   getAnagramMax(req, res, next) {
@@ -199,7 +205,7 @@ const wordsQueries = {
         `SELECT letters_id, COUNT(word) FROM words GROUP BY letters_id ORDER BY COUNT(word) DESC LIMIT 1`
       )
       .then(result => {
-        console.log('getAnagramsMax:', result);
+        // console.log('getAnagramsMax:', result);
         if (result.rows.length > 0) {
           knex('words')
             .select('*')
@@ -207,18 +213,18 @@ const wordsQueries = {
               letters_id: result.rows[0].letters_id,
             })
             .then(mostAnagrams => {
-              const mostAnagramsArray = mostAnagrams.reduce(
+              mostAnagrams = mostAnagrams.reduce(
                 (words, entry) => [...words, entry.word],
                 []
               );
-              console.log(mostAnagramsArray);
-              res.status(204).json({
-                mostAnagramsArray,
+              console.log(mostAnagrams);
+              res.status(200).json({
+                mostAnagrams,
               });
             })
             .catch(next);
         } else {
-          res.status(204).json({
+          res.status(200).json({
             mostAnagramsArray: 'Not Found',
           });
         }
@@ -234,23 +240,28 @@ const wordsQueries = {
       )
       .then(mostAnagrams => {
         console.log(mostAnagrams.rows);
-        res.status(204).json({
+        res.status(200).json({
           groups: mostAnagrams.rows,
         });
       })
       .catch(next);
   },
 
+  // CHECK POST JSON IF THEY ARE VALID ANAGRAMS
   verifyAnagrams(req, res, next) {
-    const { words } = req.body;
-
-    const letters_id = getLettersId(words[0]);
+    const { body } = req;
+    console.log(body);
+    const letters_id = body.words ? getLettersId(body.words[0]) : null;
+    if (!letters_id) {
+      next();
+    }
     knex('words')
       .select('*')
       .where({
         letters_id,
       })
       .then(results => {
+        console.log('verifyAnagrams:', results);
         let anagramStatus = true;
         const resultsArray = results.reduce(
           (array, entry) => [...array, entry.word],
@@ -261,13 +272,14 @@ const wordsQueries = {
           if (!resultsArray.includes(item)) anagramStatus = false;
         });
         console.log('VERIFY: ', anagramStatus);
-        res.status(204).json({
+        res.status(200).json({
           anagramStatus,
         });
       })
       .catch(next);
   },
 
+  // DELETE ALL WORDS BY ANAGRAM
   deleteAnagrams(req, res, next) {
     const { word } = req.params;
     const letters_id = getLettersId(word);
@@ -279,10 +291,10 @@ const wordsQueries = {
       .delete()
       .then(count =>
         count > 0
-          ? res.status(204).json({
+          ? res.status(200).json({
               message: `Removed ${count}, No Content`,
             })
-          : res.status(204).json({
+          : res.status(200).json({
               message: 'Nothing deleted!',
             })
       )

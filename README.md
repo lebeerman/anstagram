@@ -6,8 +6,6 @@ Anstagram is an APP + API that allows fast searches for [anagrams](https://en.wi
 
 ---
 
-## TODO
-
 **MVP**
 
 - [X] `POST /words.json`: Takes a JSON array of English-language words and adds them to the corpus (data store).
@@ -19,7 +17,7 @@ Anstagram is an APP + API that allows fast searches for [anagrams](https://en.wi
 
 **DEPLOY**
 
-- [ ] heroku
+- [X] [heroku app link](https://anstagram-app.herokuapp.com/)
 - Considering: aws, azure, GCP, firebase, try serverless, or dockerized approach?
 
 **Optional/Stretch**
@@ -30,7 +28,6 @@ TODO - Add Tests and Update test runner script
 - [X] Endpoint that takes a set of words and returns whether or not they are all anagrams of each other
 - [~] Endpoint to return all anagram groups of size >= *x* NOTE: This sort of works.
 - [X] Endpoint to delete a word *and all of its anagrams*
-
 
 ---
 
