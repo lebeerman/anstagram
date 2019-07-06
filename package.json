@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "NODE_ENV=development nodemon server/index.js",
-    "test": "NODE_ENV=test node server/index.js & ruby tests/anagram_test.rb",
+    "test": "NODE_ENV=test node server/index.js",
+    "testrun": "ruby tests/anagram_test.rb",
     "start": "node server/index.js"
   },
   "repository": {
