@@ -9,7 +9,7 @@ router.get('/', (req, res, next) => {
 
 // MVP ROUTES
 router.post('/:words.:json', addWords);
-router.get('/anagrams/:word.:json/:limit?', getAnagrams);
+router.get('/anagrams/:word.:json/', getAnagrams);
 router.delete('/words.:json', deleteAllWords);
 router.delete('/words/:word.:json', deleteWord);
 router.get('/words/info', getWordsInfo);
@@ -48,11 +48,10 @@ function addWords(req, res, next) {
 
 // READ
 function getAnagrams(req, res, next) {
-  // console.log('QUERY: ', req.query);
+  console.log('query: ', req.query);
   const { word } = req.params;
-  // console.log('WORD: ', word);
   const letters_id = getLettersId(word);
-  const { limit } = req.query;
+  const { limit, noun } = req.query;
   // Store the query
   let getAnagramsQuery = knex('words')
     .select('*')
@@ -64,6 +63,21 @@ function getAnagrams(req, res, next) {
   if (limit >= 0) {
     getAnagramsQuery = getAnagramsQuery.limit(limit);
   }
+  if (
+    noun &&
+    noun
+      .toString()
+      .trim()
+      .toLowerCase() === 'false'
+  ) {
+    console.log('Include proper nouns:', noun);
+    getAnagramsQuery = getAnagramsQuery.where(
+      knex.raw(
+        'NOT SUBSTRING(word FROM 1 FOR 1) != LOWER(SUBSTRING(word FROM 1 FOR 1))'
+      )
+    );
+    console.log(getAnagramsQuery);
+  }
   getAnagramsQuery
     .then(item => {
       if (!item) return res.status(404).send({ message: 'Item not found.' });
@@ -71,7 +85,7 @@ function getAnagrams(req, res, next) {
         if (entry.word !== word) words.push(entry.word);
         return words;
       }, []);
-      // console.log('DB RES: ', resultsArray);
+      console.log('DB RES: ', resultsArray);
       res.status(200).json({ anagrams: resultsArray });
     })
     .catch(next);
@@ -112,8 +126,11 @@ function getWordsInfo(req, res, next) {
   knex('words')
     .count('*')
     .then(count => {
-      console.log(count[0].count);
-      info.count = count[0].count;
+      if (count.rows[0]) {
+        info.count = minResult.rows[0].word.length;
+      } else {
+        info.count = 'Not Found';
+      }
 
       knex.schema
         .raw('SELECT word FROM words ORDER BY LENGTH(word) ASC LIMIT 1')
@@ -137,7 +154,6 @@ function getWordsInfo(req, res, next) {
                   'SELECT percentile_disc(0.5) WITHIN GROUP (ORDER BY LENGTH(words.word)) FROM words'
                 )
                 .then(medianResult => {
-                  // console.log('MEDIAN RESULT: ', medianResult);
                   if (medianResult.rows[0]) {
                     info.median = medianResult.rows[0].percentile_disc;
                   } else {

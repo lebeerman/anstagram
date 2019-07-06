@@ -20,7 +20,6 @@ readLineStream.on('line', function(line) {
       .split('')
       .sort()
       .join(''),
-    length: line.length,
     word: line,
   });
 });
