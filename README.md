@@ -21,10 +21,10 @@ Anstagram is an APP + API that allows fast searches for [anagrams](https://en.wi
 
 - [X] Endpoint that returns a [X] count of words in the corpus and [X] min/max/median/average word length
 - [X] Respect a query param for whether or not to include proper nouns in the list of anagrams
-- [ ] Endpoint that identifies words with the most anagrams
-- [ ] Endpoint that takes a set of words and returns whether or not they are all anagrams of each other
+- [X] Endpoint that identifies words with the most anagrams
+- [X] Endpoint that takes a set of words and returns whether or not they are all anagrams of each other
 - [ ] Endpoint to return all anagram groups of size >= *x*
-- [ ] Endpoint to delete a word *and all of its anagrams*
+- [X] Endpoint to delete a word *and all of its anagrams*
 
 **DEPLOY**
 

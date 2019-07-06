@@ -12,15 +12,18 @@ router.post('/:words.:json', addWords);
 router.get('/anagrams/:word.:json/', getAnagrams);
 router.delete('/words.:json', deleteAllWords);
 router.delete('/words/:word.:json', deleteWord);
-router.get('/words/info', getWordsInfo);
 
 // STRETCH ROUTES
 // count of words + min/max/median/average word length
-// Param for proper nouns in the list of anagrams
+router.get('/words/info', getWordsInfo);
 // Most Anagram Endpoint
+router.get('/anagrams/max/', getAnagramMax);
 // Endpoint that takes a set of words and returns whether or not they are all anagrams of each other
+router.post('/anagrams/verify/:words.:json', verifyAnagrams);
 // Endpoint to return all anagram groups of size >= *x*
+router.get('/anagrams/groups', getAnagramGroups);
 // Endpoint to delete a word *and all of its anagrams*
+router.delete('/anagrams/:word.:json/', deleteAnagrams);
 
 const getLettersId = word =>
   word
@@ -36,7 +39,6 @@ function addWords(req, res, next) {
         word,
       }))
     : next();
-  console.log({ newWords });
   knex('words')
     .insert(newWords)
     .then(item => {
@@ -48,7 +50,6 @@ function addWords(req, res, next) {
 
 // READ
 function getAnagrams(req, res, next) {
-  console.log('query: ', req.query);
   const { word } = req.params;
   const letters_id = getLettersId(word);
   const { limit, noun } = req.query;
@@ -76,7 +77,6 @@ function getAnagrams(req, res, next) {
         'NOT SUBSTRING(word FROM 1 FOR 1) != LOWER(SUBSTRING(word FROM 1 FOR 1))'
       )
     );
-    console.log(getAnagramsQuery);
   }
   getAnagramsQuery
     .then(item => {
@@ -85,7 +85,6 @@ function getAnagrams(req, res, next) {
         if (entry.word !== word) words.push(entry.word);
         return words;
       }, []);
-      console.log('DB RES: ', resultsArray);
       res.status(200).json({ anagrams: resultsArray });
     })
     .catch(next);
@@ -174,5 +173,86 @@ function getWordsInfo(req, res, next) {
                 });
             });
         });
+    })
+    .catch(next);
+}
+
+function getAnagramMax(req, res, next) {
+  knex
+    .raw(
+      `SELECT letters_id, COUNT(*) AS anagrams FROM words GROUP BY letters_id ORDER BY COUNT(*) DESC LIMIT 1`
+    )
+    .then(result => {
+      knex('words')
+        .select('*')
+        .where({ letters_id: result.rows[0].letters_id })
+        .then(mostAnagrams => {
+          const mostAnagramsArray = mostAnagrams.reduce((words, entry) => {
+            words.push(entry.word);
+            return words;
+          }, []);
+          console.log(mostAnagramsArray);
+          res.status(204).json({ mostAnagramsArray });
+        });
     });
+}
+
+function getAnagramGroups(req, res, next) {
+  let { limit = 1 } = req.query;
+  limit = Math.abs(parseInt(limit, null));
+  limit = limit > 9 ? 1 : limit;
+  knex
+    .raw(
+      `SELECT letters_id, COUNT(*) AS anagrams FROM words GROUP BY letters_id ORDER BY COUNT(*) DESC LIMIT ${limit}`
+    )
+    .then(mostAnagrams => {
+      console.log(mostAnagrams.rows);
+      // const mostAnagramsArray = mostAnagrams.reduce((words, entry) => {
+      //   words.push(entry.word);
+      //   return words;
+      // }, []);
+      res.status(204).json({ groups: mostAnagrams.rows });
+    });
+}
+
+function verifyAnagrams(req, res, next) {
+  const { words } = req.body;
+
+  const letters_id = getLettersId(words[0]);
+  knex('words')
+    .select('*')
+    .where({
+      letters_id,
+    })
+    .then(results => {
+      let anagramStatus = true;
+      const resultsArray = results.reduce(
+        (array, entry) => [...array, entry.word],
+        []
+      );
+      console.log('RESULTS:', resultsArray);
+      words.forEach(item => {
+        if (!resultsArray.includes(item)) anagramStatus = false;
+      });
+      console.log('VERIFY: ', anagramStatus);
+      res.status(204).json({ anagramStatus });
+    })
+    .catch(next);
+}
+
+function deleteAnagrams(req, res, next) {
+  const { word } = req.params;
+  const letters_id = getLettersId(word);
+  knex('words')
+    .select('*')
+    .where({
+      letters_id,
+    })
+    .delete()
+    .then(count =>
+      count > 0
+        ? res.status(204).json({ message: `Removed ${count}, No Content` })
+        : res.status(204).json({ message: 'Nothing deleted!' })
+    )
+    .catch(next);
 }
