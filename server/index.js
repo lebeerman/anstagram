@@ -14,7 +14,7 @@ app.use(cors({ origin: true, credentials: true })); // TODO Limit origin if need
 // TODO: Static file handler - index.html or a react app
 // app.use('/', express.static('./build'))
 
-// Middleware Routes Here:
+// Middleware Routes/Queries
 app.use('/', require('./routes/router'));
 
 // Catch all the errors and missed cases

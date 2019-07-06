@@ -17,19 +17,20 @@ Anstagram is an APP + API that allows fast searches for [anagrams](https://en.wi
 - [X] `DELETE /words/:word.json`: Deletes a single word from the data store. NOTE - this should be protected or disabled in PROD
 - [X] `DELETE /words.json`: Deletes all contents of the data store. NOTE - this should be protected or disabled in PROD
 
-**Optional/Stretch**
-
-- [X] Endpoint that returns a [X] count of words in the corpus and [X] min/max/median/average word length
-- [X] Respect a query param for whether or not to include proper nouns in the list of anagrams
-- [X] Endpoint that identifies words with the most anagrams
-- [X] Endpoint that takes a set of words and returns whether or not they are all anagrams of each other
-- [ ] Endpoint to return all anagram groups of size >= *x*
-- [X] Endpoint to delete a word *and all of its anagrams*
-
 **DEPLOY**
 
 - [ ] heroku
 - Considering: aws, azure, GCP, firebase, try serverless, or dockerized approach?
+
+**Optional/Stretch**
+TODO - Add Tests and Update test runner script
+- [X] Endpoint that returns a [X] count of words in the corpus and [X] min/max/median/average word length
+- [X] Respect a query param for whether or not to include proper nouns in the list of anagrams
+- [X] Endpoint that identifies words with the most anagrams
+- [X] Endpoint that takes a set of words and returns whether or not they are all anagrams of each other
+- [~] Endpoint to return all anagram groups of size >= *x* NOTE: This sort of works.
+- [X] Endpoint to delete a word *and all of its anagrams*
+
 
 ---
 
