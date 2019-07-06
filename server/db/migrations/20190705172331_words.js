@@ -1,8 +1,8 @@
 exports.up = function(knex) {
   return knex.schema.createTable('words', t => {
     t.increments('id');
-    t.string('word');
-    t.string('letters_id');
+    t.string('word', 255);
+    t.string('letters_id', 255);
     t.unique('word');
   });
 };

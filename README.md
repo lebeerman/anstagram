@@ -10,16 +10,16 @@ Anstagram is an APP + API that allows fast searches for [anagrams](https://en.wi
 
 **MVP**
 
-- [ ] `POST /words.json`: Takes a JSON array of English-language words and adds them to the corpus (data store).
-- [ ] `GET /anagrams/:word.json`:
-  - [ ]  Returns a JSON array of English-language words that are anagrams of the word passed in the URL.
-  - [ ]  This endpoint should support an optional query param that indicates the maximum number of results to return.
-- [ ] `DELETE /words/:word.json`: Deletes a single word from the data store.
-- [ ] `DELETE /words.json`: Deletes all contents of the data store.
+- [X] `POST /words.json`: Takes a JSON array of English-language words and adds them to the corpus (data store).
+- [X] `GET /anagrams/:word.json`:
+  - [X]  Returns a JSON array of English-language words that are anagrams of the word passed in the URL.
+  - [X]  This endpoint should support an optional query param that indicates the maximum number of results to return.
+- [X] `DELETE /words/:word.json`: Deletes a single word from the data store. NOTE - this should be protected or disabled in PROD
+- [X] `DELETE /words.json`: Deletes all contents of the data store. NOTE - this should be protected or disabled in PROD
 
 **Optional/Stretch**
 
-- [ ] Endpoint that returns a count of words in the corpus and min/max/median/average word length
+- [ ] Endpoint that returns a [X] count of words in the corpus and [X] min/max/median/average word length
 - [ ] Respect a query param for whether or not to include proper nouns in the list of anagrams
 - [ ] Endpoint that identifies words with the most anagrams
 - [ ] Endpoint that takes a set of words and returns whether or not they are all anagrams of each other

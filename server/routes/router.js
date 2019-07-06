@@ -12,6 +12,7 @@ router.post('/:words.:json', addWords);
 router.get('/anagrams/:word.:json/:limit?', getAnagrams);
 router.delete('/words.:json', deleteAllWords);
 router.delete('/words/:word.:json', deleteWord);
+router.get('/words/info', getWordsInfo);
 
 // STRETCH ROUTES
 // count of words + min/max/median/average word length
@@ -78,7 +79,6 @@ function getAnagrams(req, res, next) {
 
 // DELETE
 function deleteAllWords(req, res, next) {
-  // console.log('TESTING DELETE WORDS');
   // On Multiple DELETE - should there be different handling? Best Practice?
   knex('words')
     .select('*')
@@ -94,17 +94,69 @@ function deleteAllWords(req, res, next) {
 // DELETE - SINGLE WORD
 function deleteWord(req, res, next) {
   const { word } = req.params;
-  // console.log('TESTING DELETE SINGLE: ', word);
   knex('words')
     .select('*')
     .where({ word })
     .first()
     .delete()
     .then(count =>
-      // console.log(count);
       count >= 0
         ? res.status(204).json({ message: `Removed ${count}, No Content` })
         : res.status(204).json({ message: 'Nothing deleted!' })
     )
     .catch(next);
+}
+
+function getWordsInfo(req, res, next) {
+  const info = {};
+  knex('words')
+    .count('*')
+    .then(count => {
+      console.log(count[0].count);
+      info.count = count[0].count;
+
+      knex.schema
+        .raw('SELECT word FROM words ORDER BY LENGTH(word) ASC LIMIT 1')
+        .then(minResult => {
+          if (minResult.rows[0]) {
+            info.min = minResult.rows[0].word.length;
+          } else {
+            info.min = 'Not Found';
+          }
+          knex.schema
+            .raw('SELECT word FROM words ORDER BY LENGTH(word) DESC LIMIT 1')
+            .then(maxResult => {
+              if (maxResult.rows[0]) {
+                info.max = maxResult.rows[0].word.length;
+              } else {
+                info.max = 'Not Found';
+              }
+
+              knex.schema
+                .raw(
+                  'SELECT percentile_disc(0.5) WITHIN GROUP (ORDER BY LENGTH(words.word)) FROM words'
+                )
+                .then(medianResult => {
+                  // console.log('MEDIAN RESULT: ', medianResult);
+                  if (medianResult.rows[0]) {
+                    info.median = medianResult.rows[0].percentile_disc;
+                  } else {
+                    info.median = 'Not Found';
+                  }
+
+                  knex.schema
+                    .raw('SELECT AVG(LENGTH(word)) FROM words')
+                    .then(avgResult => {
+                      if (avgResult.rows[0]) {
+                        info.avg = parseFloat(avgResult.rows[0].avg).toFixed(2);
+                      } else {
+                        info.avg = 'Not Found';
+                      }
+                      console.log('INFO: ', info);
+                      res.status(204).json({ message: info });
+                    });
+                });
+            });
+        });
+    });
 }
