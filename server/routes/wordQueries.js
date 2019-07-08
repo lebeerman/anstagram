@@ -102,7 +102,6 @@ const wordsQueries = {
   deleteWord(req, res, next) {
     const { word } = req.params;
     return knex('words')
-      .select('*')
       .where({
         word,
       })
@@ -249,12 +248,11 @@ const wordsQueries = {
     }
   },
 
-  // DELETE All words if they are anagram from the store
+  // DELETE - All words if they are anagram from the store
   deleteAnagrams(req, res, next) {
     const { word } = req.params;
     const letters_id = getLettersId(word);
     return knex('words')
-      .select('*')
       .where({
         letters_id,
       })
