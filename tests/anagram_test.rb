@@ -141,7 +141,7 @@ class TestCases < Test::Unit::TestCase
     assert_equal(0, body['anagrams'].size)
   end
 
-  def test_get_agagrams_by_group
+  def test_get_anagrams_by_group
 
     # get groups of anagrams greater than 3, not testing the opbject values for correctness though
     res = @client.get('/anagrams/groups?size=3')
@@ -160,6 +160,27 @@ class TestCases < Test::Unit::TestCase
     body = JSON.parse(res.body)
 
     assert_equal([], body['anagramGroups'])
+  end
+
+  def test_get_verify_words_are_anagrams
+
+    # get groups of anagrams greater than 3, not testing the opbject values for correctness though
+    res = @client.post('/anagrams/verify/words.json', nil, {"words" => ["read", "dear", "dare"] })
+
+    assert_equal('200', res.code, "Unexpected response code")
+
+    body = JSON.parse(res.body)
+
+    assert_equal(true, body['anagramStatus'])
+
+    res = @client.post('/anagrams/verify/words.json', nil, {"words" => ["read", "dear", "daeeee"] })
+
+    assert_equal('200', res.code, "Unexpected response code")
+
+    body = JSON.parse(res.body)
+
+    assert_equal(false, body['anagramStatus'])
+
   end
 
 end
