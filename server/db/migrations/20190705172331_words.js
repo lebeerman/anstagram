@@ -3,6 +3,7 @@ exports.up = function(knex) {
     t.increments('id');
     t.string('word', 255);
     t.string('letters_id', 255);
+    t.string('lower_letters_id', 255);
     t.unique('word');
   });
 };

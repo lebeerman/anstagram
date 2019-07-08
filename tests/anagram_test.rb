@@ -199,4 +199,18 @@ class TestCases < Test::Unit::TestCase
 
   end
 
+  def test_fetching_anagrams_with_proper_noun_control
+
+    @client.post('/words.json', nil, {"words" => ["Read", "Dear", "Dare"] })
+
+    # fetch anagrams with limit
+    res = @client.get('/anagrams/read.json', 'noun=true')
+
+    assert_equal('200', res.code, "Unexpected response code")
+
+    body = JSON.parse(res.body)
+
+    assert_equal(["dear", "dare", "Read", "Dear", "Dare"], body['anagrams'])
+  end
+
 end

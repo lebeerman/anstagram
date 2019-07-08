@@ -9,17 +9,12 @@ const getLettersId = word =>
 
 const getQueryOption = query => {
   // TODO Think about proper edge/limit/query options - default values. offsets. options. etc
-  let { limit = 10, noun = true, size = 1 } = query;
+  let { limit = 10, noun = false, size = 1 } = query;
   limit = Math.abs(parseInt(limit, null));
   limit = limit > 100 ? 10 : limit;
   size = Math.abs(parseInt(size, null));
   size = size > 100 ? 10 : size;
-  noun =
-    toString(noun)
-      .trim()
-      .toLowerCase() === true
-      ? 'true'
-      : 'false';
+  noun = noun === 'true';
   return { limit, noun, size };
 };
 
@@ -29,6 +24,7 @@ const wordsQueries = {
     const newWords = req.body.words
       ? req.body.words.map(word => ({
           letters_id: getLettersId(word),
+          lower_letters_id: getLettersId(word.toLowerCase()),
           word,
         }))
       : next();
@@ -54,22 +50,21 @@ const wordsQueries = {
       .select('*')
       .whereNot({
         word,
-      })
-      .where({
+      });
+
+    // Cheack for the Proper Noun query param - build the query chain
+    if (noun) {
+      console.log('Include proper nouns:', noun);
+      getAnagramsQuery = getAnagramsQuery.where('lower_letters_id', letters_id);
+    } else {
+      getAnagramsQuery = getAnagramsQuery.where({
         letters_id,
       });
+    }
     // Check for a valid 'limit' param, modify the query chain
     if (limit >= 0) {
       console.log('Limit: ', limit);
       getAnagramsQuery = getAnagramsQuery.limit(limit);
-    }
-    if (noun === 'false') {
-      console.log('Include proper nouns:', noun);
-      getAnagramsQuery = getAnagramsQuery.where(
-        knex.raw(
-          'NOT SUBSTRING(word FROM 1 FOR 1) != LOWER(SUBSTRING(word FROM 1 FOR 1))'
-        )
-      );
     }
     return getAnagramsQuery
       .then(item => {

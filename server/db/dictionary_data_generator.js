@@ -20,6 +20,11 @@ readLineStream.on('line', function(line) {
       .split('')
       .sort()
       .join(''),
+    lower_letters_id: line
+      .toLowerCase()
+      .split('')
+      .sort()
+      .join(''),
     word: line,
   });
 });
