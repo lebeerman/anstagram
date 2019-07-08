@@ -22,7 +22,7 @@ const getQueryOption = query => {
 };
 
 const wordsQueries = {
-  // CREATE
+  // POST - Create new anagrams
   addWords(req, res, next) {
     const newWords = req.body.words
       ? req.body.words.map(word => ({
@@ -30,7 +30,7 @@ const wordsQueries = {
           word,
         }))
       : next();
-    knex('words')
+    return knex('words')
       .insert(newWords)
       .then(item => {
         // TODO - Message client about DUPS - 422
@@ -42,8 +42,8 @@ const wordsQueries = {
       .catch(next);
   },
 
+  // GET - list anagrams of a request
   getAnagrams(req, res, next) {
-    // READ
     const { word } = req.params;
     const letters_id = getLettersId(word);
     const { limit, noun } = getQueryOption(req.query);
@@ -69,10 +69,10 @@ const wordsQueries = {
         )
       );
     }
-    getAnagramsQuery
+    return getAnagramsQuery
       .then(item => {
         if (!item)
-          return res.status(404).send({
+          res.status(404).send({
             message: 'Item not found.',
           });
         const resultsArray = item.reduce(
@@ -91,116 +91,98 @@ const wordsQueries = {
   // DELETE
   deleteAllWords(req, res, next) {
     // On Multiple DELETE - should there be different handling? Best Practice?
-    knex('words')
+    return knex('words')
       .select('*')
       .delete()
-      .then(count =>
-        count >= 0
-          ? res.status(200).json({
-              message: `Removed ${count}, No Content`,
-            })
-          : res.status(204).send({
-              message: 'Nothing deleted!',
-            })
-      )
+      .then(res.status(204).json())
       .catch(next);
   },
 
-  // DELETE - SINGLE WORD
+  // DELETE - Single words
   deleteWord(req, res, next) {
     const { word } = req.params;
-    knex('words')
+    return knex('words')
       .select('*')
       .where({
         word,
       })
       .first()
       .delete()
-      .then(count =>
-        count >= 0
-          ? res.status(200).json({
-              message: `Removed ${count}, No Content`,
-            })
-          : res.status(204).json({
-              message: 'Nothing deleted!',
-            })
-      )
+      .then(res.status(204).json())
       .catch(next);
   },
 
+  // GET - Info on words in DB: count/min/max/median/average
+  // Possible to memoize or cache, migrate data> Persist this in 'Status' table?
+  // TODO Approach this query differently
   getWordsInfo(req, res, next) {
     const info = {};
-    try {
-      knex('words')
-        .count('*')
-        .then(count => {
-          console.log('COUNT:', count[0]);
-          if (count[0].count) {
-            info.count = count[0].count;
-          } else {
-            info.count = 'Count Not Found';
-          }
+    return knex('words')
+      .count('*')
+      .then(count => {
+        console.log('COUNT:', count[0]);
+        if (count[0].count) {
+          info.count = count[0].count;
+        } else {
+          info.count = 'Count Not Found';
+        }
 
-          knex.schema
-            .raw('SELECT word FROM words ORDER BY LENGTH(word) ASC LIMIT 1')
-            .then(minResult => {
-              if (minResult.rows[0]) {
-                info.min = minResult.rows[0].word.length;
-              } else {
-                info.min = 'Not Found';
-              }
-              knex.schema
-                .raw(
-                  'SELECT word FROM words ORDER BY LENGTH(word) DESC LIMIT 1'
-                )
-                .then(maxResult => {
-                  if (maxResult.rows[0]) {
-                    info.max = maxResult.rows[0].word.length;
-                  } else {
-                    info.max = 'Not Found';
-                  }
+        knex.schema
+          .raw('SELECT word FROM words ORDER BY LENGTH(word) ASC LIMIT 1')
+          .then(minResult => {
+            if (minResult.rows[0]) {
+              info.min = minResult.rows[0].word.length;
+            } else {
+              info.min = 'Not Found';
+            }
+            knex.schema
+              .raw('SELECT word FROM words ORDER BY LENGTH(word) DESC LIMIT 1')
+              .then(maxResult => {
+                if (maxResult.rows[0]) {
+                  info.max = maxResult.rows[0].word.length;
+                } else {
+                  info.max = 'Not Found';
+                }
 
-                  knex.schema
-                    .raw(
-                      'SELECT percentile_disc(0.5) WITHIN GROUP (ORDER BY LENGTH(words.word)) FROM words'
-                    )
-                    .then(medianResult => {
-                      if (medianResult.rows[0]) {
-                        info.median = medianResult.rows[0].percentile_disc;
-                      } else {
-                        info.median = 'Not Found';
-                      }
+                knex.schema
+                  .raw(
+                    'SELECT percentile_disc(0.5) WITHIN GROUP (ORDER BY LENGTH(words.word)) FROM words'
+                  )
+                  .then(medianResult => {
+                    if (medianResult.rows[0]) {
+                      info.median = medianResult.rows[0].percentile_disc;
+                    } else {
+                      info.median = 'Not Found';
+                    }
 
-                      knex.schema
-                        .raw('SELECT AVG(LENGTH(word)) FROM words')
-                        .then(avgResult => {
-                          if (avgResult.rows[0]) {
-                            info.avg = parseFloat(
-                              avgResult.rows[0].avg
-                            ).toFixed(2);
-                          } else {
-                            info.avg = 'Not Found';
-                          }
-                          console.log('INFO: ', info);
-                          res.status(200).json({ info });
-                        })
-                        .catch(next);
-                    })
-                    .catch(next);
-                })
-                .catch(next);
-            })
-            .catch(next);
-        })
-        .catch(next);
-    } catch (e) {
-      console.log(e);
-      next(e);
-    }
+                    knex.schema
+                      .raw('SELECT AVG(LENGTH(word)) FROM words')
+                      .then(avgResult => {
+                        if (avgResult.rows[0]) {
+                          info.avg = parseFloat(avgResult.rows[0].avg).toFixed(
+                            2
+                          );
+                        } else {
+                          info.avg = 'Not Found';
+                        }
+                        console.log('INFO: ', info);
+                        res.status(200).json({ info });
+                      })
+                      .catch(next);
+                  })
+                  .catch(next);
+              })
+              .catch(next);
+          })
+          .catch(next);
+      })
+      .catch(next);
   },
 
+  // GET - Identifies the words with the most anagrams using PSQL GROUP BY
+  // Another approach would be faster. Persist this in 'Status' table? Reports Table?
   getAnagramMax(req, res, next) {
-    knex
+    return knex
       .raw(
         `SELECT letters_id, COUNT(word) FROM words GROUP BY letters_id ORDER BY COUNT(word) DESC LIMIT 1`
       )
@@ -232,11 +214,12 @@ const wordsQueries = {
       .catch(next);
   },
 
+  // GET - Anagrams of a size >= X; x is limit param
   getAnagramGroups(req, res, next) {
     const { limit } = getQueryOption(req.query);
-    knex
+    return knex
       .raw(
-        `SELECT letters_id, COUNT(*) AS anagrams FROM words GROUP BY letters_id ORDER BY COUNT(*) DESC LIMIT ${limit}`
+        `SELECT * FROM (SELECT letters_id, COUNT(*) AS anagrams FROM words GROUP BY letters_id ORDER BY COUNT(*) DESC) AS words WHERE anagrams >= ${limit}`
       )
       .then(mostAnagrams => {
         console.log(mostAnagrams.rows);
@@ -247,56 +230,39 @@ const wordsQueries = {
       .catch(next);
   },
 
-  // CHECK POST JSON IF THEY ARE VALID ANAGRAMS
+  // POST - Receives words and checks if they are anagrams of eachother
   verifyAnagrams(req, res, next) {
-    const { body } = req;
-    console.log(body);
-    const letters_id = body.words ? getLettersId(body.words[0]) : null;
-    if (!letters_id) {
-      next();
+    const { words } = req.body;
+    console.log(words);
+    const letters_id = words[0] ? getLettersId(words[0]) : next();
+    const isAnAnagram = array =>
+      array.every(word => getLettersId(word) === letters_id);
+
+    if (isAnAnagram(words)) {
+      res.status(200).json({
+        anagramStatus: true,
+      });
+    } else {
+      res.status(200).json({
+        anagramStatus: false,
+      });
     }
-    knex('words')
-      .select('*')
-      .where({
-        letters_id,
-      })
-      .then(results => {
-        console.log('verifyAnagrams:', results);
-        let anagramStatus = true;
-        const resultsArray = results.reduce(
-          (array, entry) => [...array, entry.word],
-          []
-        );
-        console.log('RESULTS:', resultsArray);
-        words.forEach(item => {
-          if (!resultsArray.includes(item)) anagramStatus = false;
-        });
-        console.log('VERIFY: ', anagramStatus);
-        res.status(200).json({
-          anagramStatus,
-        });
-      })
-      .catch(next);
   },
 
-  // DELETE ALL WORDS BY ANAGRAM
+  // DELETE All words if they are anagram from the store
   deleteAnagrams(req, res, next) {
     const { word } = req.params;
     const letters_id = getLettersId(word);
-    knex('words')
+    return knex('words')
       .select('*')
       .where({
         letters_id,
       })
       .delete()
       .then(count =>
-        count > 0
-          ? res.status(200).json({
-              message: `Removed ${count}, No Content`,
-            })
-          : res.status(200).json({
-              message: 'Nothing deleted!',
-            })
+        res.status(200).json({
+          message: `Removed ${count} words`,
+        })
       )
       .catch(next);
   },
