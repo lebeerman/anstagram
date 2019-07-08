@@ -79,23 +79,34 @@ HTTP/1.1 204 No Content
 
 ## Running Locally
 
-TODO - Add instructions to spin up the app locally
+You will need:
+- Node - running the application
+- PostgreSQL - data storage
+- Heroku cli - for deployment
+- Ruby - for testing
+- npm - application dependencies/script runner
+
+
+
 
 ## Testing
 
-We have provided a suite of tests to help as you develop the API. To run the tests you must have Ruby installed ([docs](https://www.ruby-lang.org/en/documentation/installation/)):
+To run the tests you must have Ruby installed ([docs](https://www.ruby-lang.org/en/documentation/installation/)). Then run them with following CLI commands from the root directory:
 
+Start the Test Server
 ```{bash}
-ruby anagram_test.rb
+npm run test
 ```
 
-Only the first test will be executed, all the others have been made pending using the `pend` method. Delete or comment out the next `pend` as you get each test passing.
-
-If you are running your server somewhere other than localhost port 3000, you can configure the test runner with configuration options described by
-
+Run the tests against the running server
 ```{bash}
-ruby anagram_test.rb -h
-```.
+npm run testrun
+```
+
+Run the tests manually (optional -h for testing other than localhost)
+```{bash}
+ruby tests anagram_test.rb -h
+```
 
 ## API Client
 
@@ -105,11 +116,27 @@ To run the client in the Ruby console, use `irb`:
 
 ```{ruby}
 $ irb
-> require_relative 'anagram_client'
+> require_relative 'tests/anagram_client'
 > client = AnagramClient.new
 > client.post('/words.json', nil, { 'words' => ['read', 'dear', 'dare']})
 > client.get('/anagrams/read.json')
 ```
+
+## Implementation Details
+
+Refer to the [package.json](./package.json) for a full listing of project dependencies.
+
+**Data Storage**
+
+I chose to use a PostgreSQL database to have indexing and SQL querying available for potentially complex querying. Also, this is a tool I've used with Node and Rails and is quick to get plugged in with dev, staging, and prod localled and on Heroku.
+
+**Discussion**
+
+Node Async vs Sync when ingesting the data store/seeding the postgres database: Attempting to read a large text file with node, ingesting the data, then inserting to a database through a db connection like PG requires managing operations to prevent consuming too many resources. This lead into the core of Node and how the V8 engine is working with the File System. Node offers a file system api which is synchronous by default. I was using Knex, a query builder, to create and manage queryies. Knex takes advantage of Promises by default. Even utilizing promises, with the larger seed file, I had to research ways to get more efficient inserting. A combination of a node data stream - ingesting the file in chunks - then using knex to insert rows worked fine.
+
+Node + PG + Knex: I chose to use node because I am more comfortable with the javascript landscape. That said - I think the API Design could be optimized for performance by using different model structure with SQL, choosing a NoSQL store or with a serverless/lambda implimentation. It would be interesting to compare performance differences. For some of the optional routes I reached for raw queryies versus Knex methods to same time.
+
+According to documentation a NoSQL implimentation (DynamoDB or Redis) would be the ideal step for near-instant data retrieval. This would also allow for a lightweight/free AWS deployment. In fact, there's [tons of tutorials on this](https://serverless.com/blog/node-rest-api-with-serverless-lambda-and-dynamodb/), maybe I'll have time to try it out. See [SQL vs NoSQL](https://www.xplenty.com/blog/the-sql-vs-nosql-difference/) for more discussion on the topic and use cases - a valuable rabbit hole to explore.
 
 ## Looking Forward
 
@@ -121,21 +148,4 @@ Features that may be useful to add to the API:
 - Internationalization. Are anagrams a concept that exists in all languages? Find a linguist to chime in.
 - More security on the DB, experiment with vanilla pg instead of using Knex.js
 - Try [benchmark-bigo](https://github.com/davy/benchmark-bigo) for performance testing on your implementation
-
-## Implementation Details
-
-Refer to the [package.json](./package.json) for a full listing of project dependencies.
-
-**Data Storage**
-
-I chose to use a PostgreSQL database to have indexing and SQL querying available for potentially complex querying. Also, this is a tool I've used with Node and Rails and is quick to get plugged in with dev, staging, and prod localled and on Heroku.
-
-A NoSQL implimentation (DynamoDB or Redis) would be the ideal step for near-instant data retrieval. This would also allow for a lightweight/free AWS deployment. In fact, there's [tons of tutorials on this](https://serverless.com/blog/node-rest-api-with-serverless-lambda-and-dynamodb/), maybe I'll have time to try it out. See [SQL vs NoSQL](https://www.xplenty.com/blog/the-sql-vs-nosql-difference/) for more discussion on the topic and use cases - a valuable rabbit hole to explore.
-
-TODO - Discussion of word storage length, api response limitations/protection, etc...
-
-**Edge Cases** What issues and challenges did I run into?
-
-Node Async vs Sync when ingesting the data store/seeding the postgres database. This discussion gets into the core of Node and how the V8 engine is working with the File System. TODO - Expand with links from the stream sandbox project
-
-Node vs Ruby TODO - add a short discussion. Node Fluency, lightweight, goal to try a serverless/lambda implimentation.
+- Test and production tooling like [PM2](http://pm2.keymetrics.io/docs/usage/quick-start/). I've heard good things, but havent had to use them. It would be interesting to compare a different data storage method to PSQL
