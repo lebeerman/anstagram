@@ -213,4 +213,18 @@ class TestCases < Test::Unit::TestCase
     assert_equal(["dear", "dare", "Read", "Dear", "Dare"], body['anagrams'])
   end
 
+  def test_get_info_on_words_in_store
+    # gets an array of words with the most anagrams
+    res = @client.get('/words/info')
+
+    assert_equal('200', res.code, "Unexpected response code")
+
+    body = JSON.parse(res.body)
+
+    assert_not_nil(body['info'])
+
+    assert_equal(["avg","count","max", "median", "min"], body['info'].keys.sort)
+
+  end
+
 end
