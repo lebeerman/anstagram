@@ -9,16 +9,18 @@ const getLettersId = word =>
 
 const getQueryOption = query => {
   // TODO Think about proper edge/limit/query options - default values. offsets. options. etc
-  let { limit = 10, noun = true } = query;
+  let { limit = 10, noun = true, size = 1 } = query;
   limit = Math.abs(parseInt(limit, null));
   limit = limit > 100 ? 10 : limit;
+  size = Math.abs(parseInt(size, null));
+  size = size > 100 ? 10 : size;
   noun =
     toString(noun)
       .trim()
       .toLowerCase() === true
       ? 'true'
       : 'false';
-  return { limit, noun };
+  return { limit, noun, size };
 };
 
 const wordsQueries = {
@@ -213,17 +215,17 @@ const wordsQueries = {
       .catch(next);
   },
 
-  // GET - Anagrams of a size >= X; x is limit param
+  // GET - Anagram Group of a size >= X; x is size param
   getAnagramGroups(req, res, next) {
-    const { limit } = getQueryOption(req.query);
+    const { size } = getQueryOption(req.query);
     return knex
       .raw(
-        `SELECT * FROM (SELECT letters_id, COUNT(*) AS anagrams FROM words GROUP BY letters_id ORDER BY COUNT(*) DESC) AS words WHERE anagrams >= ${limit}`
+        `SELECT * FROM (SELECT letters_id, COUNT(*) AS anagrams FROM words GROUP BY letters_id ORDER BY COUNT(*) DESC) AS words WHERE anagrams >= ${size}`
       )
       .then(mostAnagrams => {
-        console.log(mostAnagrams.rows);
+        console.log(mostAnagrams.rows, size);
         res.status(200).json({
-          groups: mostAnagrams.rows,
+          anagramGroups: mostAnagrams.rows,
         });
       })
       .catch(next);
