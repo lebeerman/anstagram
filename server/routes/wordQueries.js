@@ -188,29 +188,23 @@ const wordsQueries = {
         `SELECT letters_id, COUNT(word) FROM words GROUP BY letters_id ORDER BY COUNT(word) DESC LIMIT 1`
       )
       .then(result => {
-        // console.log('getAnagramsMax:', result);
-        if (result.rows.length > 0) {
-          knex('words')
-            .select('*')
-            .where({
-              letters_id: result.rows[0].letters_id,
-            })
-            .then(mostAnagrams => {
-              mostAnagrams = mostAnagrams.reduce(
-                (words, entry) => [...words, entry.word],
-                []
-              );
-              console.log(mostAnagrams);
-              res.status(200).json({
-                mostAnagrams,
-              });
-            })
-            .catch(next);
-        } else {
-          res.status(200).json({
-            mostAnagramsArray: 'Not Found',
-          });
-        }
+      // console.log('getAnagramsMax:', result);
+        knex('words')
+          .select('*')
+          .where({
+            letters_id: result.rows[0].letters_id,
+          })
+          .then(mostAnagrams => {
+            mostAnagrams = mostAnagrams.reduce(
+              (words, entry) => [...words, entry.word],
+              []
+            );
+            console.log(mostAnagrams);
+            res.status(200).json({
+              mostAnagrams,
+            });
+          })
+          .catch(next);
       })
       .catch(next);
   },

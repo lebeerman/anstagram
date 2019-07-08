@@ -183,4 +183,20 @@ class TestCases < Test::Unit::TestCase
 
   end
 
+  def test_get_word_with_most_anagrams
+
+    # gets an array of words with the most anagrams
+    res = @client.get('/anagrams/max')
+
+    assert_equal('200', res.code, "Unexpected response code")
+
+    body = JSON.parse(res.body)
+
+    assert_not_nil(body['mostAnagrams'])
+
+    expected_anagrams = %w(dare dear read)
+    assert_equal(expected_anagrams, body['mostAnagrams'].sort)
+
+  end
+
 end
