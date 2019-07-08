@@ -1,31 +1,30 @@
 /*
-	Eventually by HTML5 UP
 	html5up.net | @ajlkn
-	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
 */
+const API_URL = window.location.href.toString().includes('anstagram') ? 'http://anstagram-app.herokuapp.com' : 'http://localhost:3000';
 
-(function() {
-
+(function () {
 
   let $body = document.querySelector('body');
 
   // Methods/polyfills.
 
   // classList | (c) @remy | github.com/remy/polyfills | rem.mit-license.org
-  !(function() {
+  !(function () {
     function t(t) {
       this.el = t;
       for (
-        let n = t.className.replace(/^\s+|\s+$/g, '').split(/\s+/), i = 0;
-        i < n.length;
-        i++
+        let n = t.className.replace(/^\s+|\s+$/g, '').split(/\s+/), i = 0; i < n.length; i++
       )
         e.call(this, n[i]);
     }
+
     function n(t, n, i) {
-      Object.defineProperty
-        ? Object.defineProperty(t, n, { get: i })
-        : t.__defineGetter__(n, i);
+      Object.defineProperty ?
+        Object.defineProperty(t, n, {
+          get: i
+        }) :
+        t.__defineGetter__(n, i);
     }
     if (
       !(
@@ -34,9 +33,9 @@
       )
     ) {
       var i = Array.prototype;
-        var e = i.push;
-        var s = i.splice;
-        var o = i.join;
+      var e = i.push;
+      var s = i.splice;
+      var o = i.join;
       (t.prototype = {
         add(t) {
           this.contains(t) ||
@@ -63,18 +62,18 @@
           );
         },
       }),
-        (window.DOMTokenList = t),
-        n(Element.prototype, 'classList', function() {
-          return new t(this);
-        });
+      (window.DOMTokenList = t),
+      n(Element.prototype, 'classList', function () {
+        return new t(this);
+      });
     }
   })();
 
   // canUse
-  window.canUse = function(p) {
+  window.canUse = function (p) {
     if (!window._canUse) window._canUse = document.createElement('div');
     let e = window._canUse.style;
-      var up = p.charAt(0).toUpperCase() + p.slice(1);
+    var up = p.charAt(0).toUpperCase() + p.slice(1);
     return (
       p in e ||
       `Moz${  up}` in e ||
@@ -85,22 +84,22 @@
   };
 
   // window.addEventListener
-  (function() {
+  (function () {
     if ('addEventListener' in window) return;
-    window.addEventListener = function(type, f) {
+    window.addEventListener = function (type, f) {
       window.attachEvent(`on${  type}`, f);
     };
   })();
 
   // Play initial animations on page load.
-  window.addEventListener('load', function() {
-    window.setTimeout(function() {
+  window.addEventListener('load', function () {
+    window.setTimeout(function () {
       $body.classList.remove('is-preload');
     }, 100);
   });
 
   // Slideshow Background.
-  (function() {
+  (function () {
     // Settings.
     const settings = {
       // Images (in the format of 'url': 'alignment').
@@ -116,12 +115,12 @@
 
     // Vars.
     let pos = 0;
-      var lastPos = 0;
-      var $wrapper;
-      var $bgs = [];
-      var $bg;
-      var k;
-      var v;
+    var lastPos = 0;
+    var $wrapper;
+    var $bgs = [];
+    var $bg;
+    var k;
+    var v;
 
     // Create BG wrapper, BGs.
     $wrapper = document.createElement('div');
@@ -146,7 +145,7 @@
     // Bail if we only have a single BG or the client doesn't support transitions.
     if ($bgs.length == 1 || !canUse('transition')) return;
 
-    window.setInterval(function() {
+    window.setInterval(function () {
       lastPos = pos;
       pos++;
 
@@ -159,14 +158,14 @@
       $bgs[pos].classList.add('top');
 
       // Hide last image after a short delay.
-      window.setTimeout(function() {
+      window.setTimeout(function () {
         $bgs[lastPos].classList.remove('visible');
       }, settings.delay / 2);
     }, settings.delay);
   })();
 
   // Anagram Form.
-  (function() {
+  (function () {
     // Vars.
     const $form = document.querySelectorAll('#signup-form')[0];
     var $submit = document.querySelectorAll(
@@ -181,7 +180,7 @@
     $message = document.createElement('span');
     $message.classList.add('message');
     $form.appendChild($message);
-    $message._show = function(type, text) {
+    $message._show = function (type, text) {
       $message.classList.remove('success');
       $message.classList.remove('failure');
       $message.innerHTML = text;
@@ -193,34 +192,34 @@
       // }, 10000);
     };
 
-    $message._hide = function() {
+    $message._hide = function () {
       $message.classList.remove('visible');
     };
 
     // Events.
     // Note: If you're *not* using AJAX, get rid of this event listener.
-    $form.addEventListener('submit', function(event) {
+    $form.addEventListener('submit', function (event) {
       event.stopPropagation();
       event.preventDefault();
       let word = document.getElementById('word').value;
 
       console.log(word);
-      fetch(`http://localhost:3000/anagrams/${word}.json`, {
+      fetch(`${API_URL}/anagrams/${word}.json`, {
         method: 'GET',
-        headers : new Headers(),
+        headers: new Headers(),
       })
         .then((res) => res.json())
-        .then((data) =>  {
+        .then((data) => {
           let words = '';
           data.anagrams.forEach(item => words += ` ${item} `);
-          if(words){
+          if (words) {
             words = 'Anagrams: ' + words;
             $message._show('success', words);
           } else {
             $message._show('failure', 'No Grams!');
           }
         })
-        .catch((err)=> {
+        .catch((err) => {
           console.log(err);
           $message._show('failure', err);
         });
