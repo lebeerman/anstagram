@@ -35,6 +35,9 @@ router.get('/anagrams/:word.:json/', (req, res, next) => {
 });
 
 router.delete('/words.:json', (req, res, next) => {
+  if (process.env.NODE_ENV === 'production') {
+    res.status(405).json();
+  }
   wordQueries
     .deleteAllWords()
     .then(res.status(204).json())
@@ -42,6 +45,9 @@ router.delete('/words.:json', (req, res, next) => {
 });
 
 router.delete('/words/:word.:json', (req, res, next) => {
+  if (process.env.NODE_ENV === 'production') {
+    res.status(405).json();
+  }
   wordQueries
     .deleteWord(req)
     .then(res.status(204).json())
@@ -102,6 +108,9 @@ router.get('/anagrams/groups', (req, res, next) => {
 
 // Endpoint to delete a word *and all of its anagrams*
 router.delete('/anagrams/:word.:json/', (req, res, next) => {
+  if (process.env.NODE_ENV === 'production') {
+    res.status(405).json();
+  }
   wordQueries
     .deleteAnagrams(req)
     .then(count =>
