@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const morgan = require('morgan');
 const cors = require('cors');
+const path = require('path');
 
 const app = (module.exports = express());
 const port = parseInt(process.env.PORT || 3000);
@@ -16,7 +17,7 @@ app.use(morgan(process.env.NODE_ENV !== 'production' ? 'dev' : 'combined'));
 app.use(cors({ origin: true, credentials: true })); // TODO Limit origin if needed, not sure yet
 
 // TODO: Static file handler - index.html or a react app
-// app.use('/', express.static('./build'))
+app.use('/', express.static('./public'));
 
 // Middleware Routes/Queries
 app.use('/', require('./routes/router'));

@@ -1,12 +1,8 @@
 const router = (module.exports = require('express').Router());
 const wordQueries = require('./wordQueries');
-// http://expressjs.com/en/guide/routing.html - source for more info on route handling
-
-router.get('/', (req, res, next) => {
-  res.status(200).send('<p>Hello from Express<p>');
-});
 
 // ROUTES
+// Post - add words to the store
 router.post('/:words.:json', (req, res, next) => {
   wordQueries
     .addWords(req.body.words)
@@ -18,6 +14,7 @@ router.post('/:words.:json', (req, res, next) => {
     .catch(next);
 });
 
+// Get - anagrams of a word passed as JSON
 router.get('/anagrams/:word.:json/', (req, res, next) => {
   wordQueries
     .getAnagrams(req, next)
@@ -34,6 +31,7 @@ router.get('/anagrams/:word.:json/', (req, res, next) => {
     .catch(next);
 });
 
+// Delete All Route - disabled in prod
 router.delete('/words.:json', (req, res, next) => {
   if (process.env.NODE_ENV === 'production') {
     res.status(405).json();
@@ -44,6 +42,7 @@ router.delete('/words.:json', (req, res, next) => {
     .catch(next);
 });
 
+// Delete Single Route - disabled in prod
 router.delete('/words/:word.:json', (req, res, next) => {
   if (process.env.NODE_ENV === 'production') {
     res.status(405).json();
