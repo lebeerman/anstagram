@@ -5,7 +5,11 @@ const cors = require('cors');
 
 const app = (module.exports = express());
 const port = parseInt(process.env.PORT || 3000);
+const helmet = require('helmet');
 
+if (process.env.NODE_ENV !== 'production') {
+  app.use(helmet());
+}
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(morgan(process.env.NODE_ENV !== 'production' ? 'dev' : 'combined'));
