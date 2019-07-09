@@ -125,7 +125,13 @@ You will need:
     CREATE DATABASE <DATABASE NAME>
   ```
 
-1. Configure knexfile with [appropriate connections](knexfile.js). Use the databases created previously
+1. Configure knexfile with [appropriate connections](knexfile.js). Use the databases created previously. Run the knex migration and seed the data store.
+
+  ```{base}
+    knex migrate:latest
+    knex seed:run
+  ```
+
 
 ## Testing
 
