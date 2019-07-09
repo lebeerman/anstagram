@@ -4,33 +4,6 @@
 
 Anstagram is an APP + API that allows fast searches for [anagrams](https://en.wikipedia.org/wiki/Anagram). Currently you can lookup anagrams (in the english language) for a set of letters/or a word.
 
----
-
-**MVP**
-
-- [X] `POST /words.json`: Takes a JSON array of English-language words and adds them to the corpus (data store).
-- [X] `GET /anagrams/:word.json`:
-  - [X]  Returns a JSON array of English-language words that are anagrams of the word passed in the URL.
-  - [X]  This endpoint should support an optional query param that indicates the maximum number of results to return.
-- [X] `DELETE /words/:word.json`: Deletes a single word from the data store. NOTE - this should be protected or disabled in PROD
-- [X] `DELETE /words.json`: Deletes all contents of the data store. NOTE - this should be protected or disabled in PROD
-
-**DEPLOY**
-
-- [X] [heroku app link](https://anstagram-app.herokuapp.com/)
-- Considering: aws, azure, GCP, firebase, try serverless, or dockerized approach?
-
-**Optional/Stretch**
-TODO - Add Tests and Update test runner script
-- [X] Endpoint that returns a [X] count of words in the corpus and [X] min/max/median/average word length
-- [X] Respect a query param for whether or not to include proper nouns in the list of anagrams
-- [X] Endpoint that identifies words with the most anagrams
-- [X] Endpoint that takes a set of words and returns whether or not they are all anagrams of each other
-- [~] Endpoint to return all anagram groups of size >= *x* NOTE: This sort of works.
-- [X] Endpoint to delete a word *and all of its anagrams*
-
----
-
 ### ABOUT THE API
 
 Clients can interact with the API over HTTP, and all data sent and received is expected to be in JSON format. Some examples (assuming the API is being served on localhost port 3000):
@@ -73,6 +46,51 @@ HTTP/1.1 204 No Content
 $ curl -i -X DELETE http://localhost:3000/words.json
 HTTP/1.1 204 No Content
 ...
+
+# Get info on the words currently in the Dictionary
+$ curl -i http://localhost:3000/words/info
+HTTP/1.1 200 OK
+{
+    "info": {
+        "avg": "9.57",
+        "median": 9,
+        "max": 24,
+        "min": 1,
+        "count": "235886"
+    }
+}
+
+# Gets the largest group of anagrams/word with the most anagrams
+$ curl -i http://localhost:3000/anagrams/max
+HTTP/1.1 200 OK
+{
+    "mostAnagrams": [
+        "caret",
+        "carte",
+        "cater",
+        "recta",
+        "crate",
+        "creat",
+        "creta",
+        "react",
+        "trace"
+    ]
+}
+
+# Endpoint to return all letter groups for anagrams of size >= *x*
+# Subsequent calls to the API for the words with these letter groups
+# would be used to find the corresponding english words
+$ curl -i http://localhost:3000/anagrams/groups?size=8
+{
+  "anagramGroups":[
+    {"letters_id":"acert","anagrams":"9"},
+    {"letters_id":"agnor","anagrams":"9"},
+    {"letters_id":"eerst","anagrams":"9"},
+    {"letters_id":"aelpt","anagrams":"8"},
+    {"letters_id":"aelrst","anagrams":"8"}
+    ]
+}
+
 ```
 
 **Note:** a word is not considered to be its own anagram.
@@ -82,35 +100,57 @@ HTTP/1.1 204 No Content
 You will need:
 - Node - running the application
 - PostgreSQL - data storage
-- Heroku cli - for deployment
+- Heroku cli - for deployment/heroku account
 - Ruby - for testing
 - npm - application dependencies/script runner
+- git / Github account
 
+1. Clone Repo.
 
+  ```{bash}
+    git clone <REPO NAME>
+  ```
 
+1. Install dependencies.
+
+  ```{bash}
+    npm install
+  ```
+
+1. Create Env Databases for development and testing locally
+
+  ```{bash}
+    psql
+    CREATE DATABASE <DATABASE NAME>
+  ```
+
+1. Configure knexfile with [appropriate connections](knexfile.js). Use the databases created previously
 
 ## Testing
 
-To run the tests you must have Ruby installed ([docs](https://www.ruby-lang.org/en/documentation/installation/)). Then run them with following CLI commands from the root directory:
+To run the tests you must have Node/NPM + Ruby installed ([docs](https://www.ruby-lang.org/en/documentation/installation/)). Then run them with following CLI commands from the root directory:
 
 Start the Test Server
+
 ```{bash}
 npm run test
 ```
 
-Run the tests against the running server
+Run the tests against the concurrently running server. As you develop the test env is kept running with `nodemen` to easily test code changes as you go.
+
 ```{bash}
 npm run testrun
 ```
 
 Run the tests manually (optional -h for testing other than localhost)
+
 ```{bash}
 ruby tests anagram_test.rb -h
 ```
 
 ## API Client
 
-We have provided an API client in `anagram_client.rb`. This is used in the test suite, and can also be used in development.
+An API client in `anagram_client.rb` has been provided. This is used in the test suite, and can also be used in development (helpful for troubleshooting when running the app with nodemon or the `npm run dev`, `npm run test`).
 
 To run the client in the Ruby console, use `irb`:
 
@@ -132,20 +172,20 @@ I chose to use a PostgreSQL database to have indexing and SQL querying available
 
 **Discussion**
 
-Node Async vs Sync when ingesting the data store/seeding the postgres database: Attempting to read a large text file with node, ingesting the data, then inserting to a database through a db connection like PG requires managing operations to prevent consuming too many resources. This lead into the core of Node and how the V8 engine is working with the File System. Node offers a file system api which is synchronous by default. I was using Knex, a query builder, to create and manage queryies. Knex takes advantage of Promises by default. Even utilizing promises, with the larger seed file, I had to research ways to get more efficient inserting. A combination of a node data stream - ingesting the file in chunks - then using knex to insert rows worked fine.
+**Node Async vs Sync** when ingesting the data store/seeding the postgres database: Attempting to read a large text file with node, ingesting the data, then inserting to a database through a db connection like PG requires managing operations to prevent consuming too much memory. This leds to exploring Node streams and how the V8 engine is working with the File System, sync vs async. Node offers a file system api which is synchronous by default. I used Knex, a popular query builder, to create and manage queryies. Knex takes advantage of Promises by default. Even utilizing promises, with the larger seed file, I had to research ways to get more efficient inserting. A combination of a node data stream - ingesting the file in chunks - then using knex to insert rows worked fine.
 
-Node + PG + Knex: I chose to use node because I am more comfortable with the javascript landscape. That said - I think the API Design could be optimized for performance by using different model structure with SQL, choosing a NoSQL store or with a serverless/lambda implimentation. It would be interesting to compare performance differences. For some of the optional routes I reached for raw queryies versus Knex methods to same time.
+**Node + PG + Knex:** I chose to use node because I am more comfortable with the javascript landscape. That said - I think the API Design could be optimized for performance by using different model structure with SQL, choosing a NoSQL store or with a serverless/lambda implimentation. It would be interesting to compare performance differences. For some of the optional routes I reached for raw queryies versus Knex methods to save time/improve the query.
 
-According to documentation a NoSQL implimentation (DynamoDB or Redis) would be the ideal step for near-instant data retrieval. This would also allow for a lightweight/free AWS deployment. In fact, there's [tons of tutorials on this](https://serverless.com/blog/node-rest-api-with-serverless-lambda-and-dynamodb/), maybe I'll have time to try it out. See [SQL vs NoSQL](https://www.xplenty.com/blog/the-sql-vs-nosql-difference/) for more discussion on the topic and use cases - a valuable rabbit hole to explore.
+According to documentation a NoSQL implimentation (DynamoDB or Redis) would be the ideal step for near-instant data retrieval. This might also allow for a lightweight/free AWS deployment. There's [tutorials on this](https://serverless.com/blog/node-rest-api-with-serverless-lambda-and-dynamodb/), which may be a worthwhile rabbit hole to explore to compare performance. See [SQL vs NoSQL](https://www.xplenty.com/blog/the-sql-vs-nosql-difference/) for more discussion on the topic and use cases.
 
 ## Looking Forward
 
 Features that may be useful to add to the API:
 
 - Move to aws lambda + gateway
-- Data Visualization for the cryto nerds out there.
-- Browser Extension - shuffle words on the go.
+- Data Visualization for the crypto nerds out there. E.g. visual of distributions of anagrams across letters, word length, etc.
+- Browser Extension - shuffle words on the go. Win at Scrabble any time??? Import the official scrabble library.
 - Internationalization. Are anagrams a concept that exists in all languages? Find a linguist to chime in.
 - More security on the DB, experiment with vanilla pg instead of using Knex.js
 - Try [benchmark-bigo](https://github.com/davy/benchmark-bigo) for performance testing on your implementation
-- Test and production tooling like [PM2](http://pm2.keymetrics.io/docs/usage/quick-start/). I've heard good things, but havent had to use them. It would be interesting to compare a different data storage method to PSQL
+- Test and production tooling like [PM2](http://pm2.keymetrics.io/docs/usage/quick-start/). It would be interesting to compare a different data storage method to PSQL.

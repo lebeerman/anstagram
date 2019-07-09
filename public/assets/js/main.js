@@ -1,7 +1,7 @@
 /*
 	html5up.net | @ajlkn
 */
-const API_URL = window.location.href.toString().includes('anstagram') ? 'http://anstagram-app.herokuapp.com' : 'http://localhost:3000';
+const API_URL = window.location.href.toString().includes('anstagram') ? 'https://anstagram-app.herokuapp.com' : 'http://localhost:3000';
 
 (function () {
 
