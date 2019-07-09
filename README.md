@@ -2,13 +2,14 @@
 
 =========
 
-Anstagram is an APP + API that allows fast searches for [anagrams](https://en.wikipedia.org/wiki/Anagram). Currently you can lookup anagrams (in the english language) for a set of letters/or a word.
+Anstagram is an APP + API that allows for searches for [anagrams](https://en.wikipedia.org/wiki/Anagram). Currently you can lookup anagrams (in the english language) for a set of letters/or a word using the interface. Additionally, you can interact with the api as described below. 
 
 ### ABOUT THE API
 
 Clients can interact with the API over HTTP, and all data sent and received is expected to be in JSON format. Some examples (assuming the API is being served on localhost port 3000):
 
-USAGE
+USAGE 
+(note the deployed herokuapp has DELETE functionality disabled and the hobby-dev status will limit total data  and have some performance limits automatically because... It basically goes to sleep when it's not in use. But it's free :) )
 
 ```{bash}
 # Adding words to the corpus
