@@ -6,6 +6,8 @@ Anstagram is an APP + API that allows for searches for [anagrams](https://en.wik
 
 ### ABOUT THE API
 
+[Live App + Endpoint](https://anstagram-app.herokuapp.com/)
+
 Clients can interact with the API over HTTP, and all data sent and received is expected to be in JSON format. Some examples (assuming the API is being served on localhost port 3000):
 
 USAGE 
@@ -38,12 +40,12 @@ HTTP/1.1 200 OK
   ]
 }
 
-# Delete single word
+# Delete single word (Disabled on Live App)
 $ curl -i -X DELETE http://localhost:3000/words/read.json
 HTTP/1.1 204 No Content
 ...
 
-# Delete all words
+# Delete all words (Disabled on Live App)
 $ curl -i -X DELETE http://localhost:3000/words.json
 HTTP/1.1 204 No Content
 ...
